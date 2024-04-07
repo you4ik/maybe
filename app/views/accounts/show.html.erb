@@ -1,0 +1,79 @@
+<%= turbo_stream_from @account %>
+<div class="space-y-4">
+  <div class="flex justify-between items-center">
+    <div class="flex items-center gap-3">
+      <div class="bg-green-600/10 rounded-full h-8 w-8 flex items-center justify-center">
+        <span class="text-green-600"><%= @account.name[0].upcase %></span>
+      </div>
+      <h2 class="font-medium text-xl"><%= @account.name %></h2>
+    </div>
+    <div class="flex items-center gap-3">
+      <%= button_to sync_account_path(@account), method: :post, class: "flex items-center gap-2", title: "Sync Account" do %>
+        <%= lucide_icon "refresh-cw", class: "w-4 h-4 text-gray-900 hover:text-gray-500" %>
+      <% end %>
+      <div class="relative cursor-not-allowed">
+        <div class="flex items-center gap-2 px-3 py-2">
+          <span class="text-gray-900"><%= @account.balance_money.currency.iso_code %> <%= @account.balance_money.currency.symbol %></span>
+          <%= lucide_icon("chevron-down", class: "w-5 h-5 text-gray-500") %>
+        </div>
+      </div>
+      <div class="relative cursor-pointer" data-controller="menu">
+        <button data-menu-target="button" class="flex hover:bg-gray-100 p-2 rounded">
+          <%= lucide_icon("more-horizontal", class: "w-5 h-5 text-gray-500") %>
+        </button>
+        <div data-menu-target="content" class="absolute z-10 top-10 right-0 border border-alpha-black-25 bg-white rounded-lg shadow-xs hidden">
+          <div class="w-48 px-3 text-sm leading-6 text-gray-900 bg-white shadow-lg shrink rounded-xl ring-1 ring-gray-900/5">
+            <%= button_to account_path(@account), 
+                method: :delete, 
+                class: "block w-full py-2 text-red-600 hover:text-red-800 flex items-center", 
+                data: { 
+                  turbo_confirm: { 
+                    title: t("custom_turbo_confirm.account_destroy.title"), 
+                    body: t("custom_turbo_confirm.account_destroy.body_html"), 
+                    accept: t("custom_turbo_confirm.account_destroy.accept", name: @account.name) 
+                  } 
+                } do %>
+              <%= lucide_icon("trash-2", class: "w-5 h-5 mr-2") %> Delete account
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <%= turbo_frame_tag "sync_message" do %>
+    <%= render partial: "accounts/sync_message", locals: { is_syncing: @account.syncing? } %>
+  <% end %>
+  <div class="bg-white shadow-xs rounded-xl border border-alpha-black-25 rounded-lg">
+    <div class="p-4 flex justify-between">
+      <div class="space-y-2">
+        <%= render partial: "shared/balance_heading", locals: { 
+            label: "Total Value", 
+            period: @period,
+            balance: @account.balance_money,
+            trend: @balance_series.trend
+          } 
+        %>
+      </div>
+      <%= form_with url: account_path(@account), method: :get, class: "flex items-center gap-4", data: { controller: "auto-submit-form" } do %>
+        <%= render partial: "shared/period_select", locals: { value: @period.name } %>
+      <% end %>
+    </div>
+    <div class="h-96 flex items-center justify-center text-2xl font-bold">
+      <%= render partial: "shared/line_chart", locals: { series: @balance_series } %>
+    </div>
+  </div>
+  <div data-controller="tabs" data-tabs-active-class="bg-gray-100" data-tabs-default-tab-value="account-history-tab">
+    <div class="flex gap-1 text-sm text-gray-900 font-medium mb-4">
+      <button data-id="account-history-tab" class="p-2 rounded-lg" data-tabs-target="btn" data-action="click->tabs#select">History</button>
+      <button data-id="account-transactions-tab" class="p-2 rounded-lg" data-tabs-target="btn" data-action="click->tabs#select">Transactions</button>
+    </div>
+    <div class="min-h-[800px]">
+      <div data-tabs-target="tab" id="account-history-tab">
+        <%= render partial: "accounts/account_history", locals: { account: @account, valuations: @valuation_series } %>
+      </div>
+      <div data-tabs-target="tab" id="account-transactions-tab" class="hidden">
+        <%= render partial: "accounts/transactions", locals: { transactions: @account.transactions.order(date: :desc) } %>
+      </div>
+    </div>
+  </div>
+</div>

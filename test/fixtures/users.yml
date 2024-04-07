@@ -1,0 +1,13 @@
+family_admin:
+  family: dylan_family
+  first_name: Bob
+  last_name: Dylan
+  email: bob@bobdylan.com
+  password_digest: <%= BCrypt::Password.create('password') %>
+
+family_member:
+  family: dylan_family
+  first_name: Jakob
+  last_name: Dylan
+  email: jakobdylan@yahoo.com
+  password_digest: <%= BCrypt::Password.create('password') %>
